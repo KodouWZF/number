@@ -1,9 +1,11 @@
 import tkinter as tk
-from tkinter import filedialog
 import cv2
 import torch
 import numpy as np
 import PIL.Image as Image
+
+from torchvision import transforms
+from tkinter import filedialog
 
 class Net(torch.nn.Module):
     def __init__(self):
@@ -40,15 +42,24 @@ root.title("识别程序")
 # 设置窗口大小
 root.geometry("400x300")
 
+model = torch.load("./models/model_Mnist_10.pth", weights_only=False)  # 加载模型
+
 # 定义选择文件识别函数
 def select_file():
     file_path = filedialog.askopenfilename()
-    print(file_path)
+    #print(file_path)
     img = Image.open(file_path)
+    #print(img.size)
     img = img.resize((28, 28))  # 调整图像大小
     img_array = np.array(img)  # 将图像转换为NumPy数组
+    #print(img_array.shape)
+    if img_array.shape != (28, 28):
+        img_array = img_array[:, :, 0]
+    
+    #print(img_array.shape)
     img_tensor = torch.tensor(img_array, dtype=torch.float32).unsqueeze(0)  # 将图像转换为Tensor
-    model = torch.load("./models/model_Mnist_10.pth", weights_only=False)  # 加载模型
+    #print(img_tensor.shape)
+    
     output = model(img_tensor)[0]
     predicted = torch.argmax(output).item()
     result_label.config(text=f"预测结果: {predicted}")
